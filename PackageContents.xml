@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0"
+    Name="日照测试范围绘制插件"
+    Description="自动绘制建筑日照测试扇形范围"
+    Author="uvian"
+    AppVersion="1.0.2"
+    ProductCode="{F3A2B1C4-D5E6-7890-ABCD-EF1234567890}"
+    UpgradeCode="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}">
+
+  <RuntimeRequirements OS="Win64" Platform="AutoCAD" SeriesMin="R23.1" SeriesMax="R23.1" />
+
+  <Components Description="主程序">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD" SeriesMin="R23.1" SeriesMax="R23.1" />
+    <ComponentEntry AppName="SolarTestRange" AppType=".NET" ModuleName="./Contents/SolarTestRange.dll" />
+  </Components>
+</ApplicationPackage>
