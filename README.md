@@ -14,10 +14,11 @@
 ## 安装
 
 1. 从 [Releases](https://github.com/uvian/solar-test-range/releases) 下载 `SolarTestRange.dll`
-2. 将 DLL 放入 AutoCAD 插件目录：
-   - `C:\Program Files\Autodesk\AutoCAD 2020\Support\`
-   - 或拖入 AutoCAD 绘图区直接加载
+2. 拖入 AutoCAD 绘图区，即可加载
 3. 输入命令 **`TESTRANGE`**
+
+> 如需永久加载，输 `APPLOAD` → 内容 → 添加 `.dll` → 勾选"启动时加载"。
+> 中望CAD 操作相同。
 
 ## 使用
 
