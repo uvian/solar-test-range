@@ -14,12 +14,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET Framework
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
-    - name: Restore NuGet packages
+    - name: Restore
       run: dotnet restore SolarTestRange.sln
 
     - name: Build
@@ -31,9 +31,9 @@ jobs:
         name: SolarTestRange
         path: src/SolarTestRange/bin/Release/net472/SolarTestRange.dll
 
-    - name: Create Release (tagged only)
+    - name: Upload to Release (tagged only)
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v2
-      with:
-        files: src/SolarTestRange/bin/Release/net472/SolarTestRange.dll
-        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload v1.0.0 src/SolarTestRange/bin/Release/net472/SolarTestRange.dll --repo ${{ github.repository }} --clobber || echo "Release already exists, uploaded asset"
