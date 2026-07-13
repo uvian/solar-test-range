@@ -15,14 +15,16 @@
 
 1. 从 [Releases](https://github.com/uvian/solar-test-range/releases) 下载 `SolarTestRange.dll`
 2. 拖入 AutoCAD 绘图区，或输入命令 `NETLOAD` 选择 `.dll`
-3. 输入 **`TESTRANGE`** 运行
+3. 输入 **`HUATU`** 运行
+
+> AutoCAD 命令不区分大小写，`huatu`、`HUATU`、`HuaTu` 均可。
 
 > 永久加载：`NETLOAD` 一次后，输入 `CUI` → 自定义 → 拖入命令到工具栏即可。
 > 中望CAD 操作方法相同。
 
 ## 使用
 
-1. 输入 `TESTRANGE` 回车
+1. 输入 `HUATU` 回车
 2. 选择建筑轮廓的闭合多段线
 3. 输入建筑高度（米）
 4. 自动生成：青色射线 + 黄色闭合线 + 品红圆弧 + 红色填充边界

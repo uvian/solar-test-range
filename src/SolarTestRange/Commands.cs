@@ -9,7 +9,7 @@ namespace SolarTestRange
 {
     public class Commands
     {
-        [CommandMethod("TESTRANGE")]
+        [CommandMethod("HUATU")]
         public void TestRange()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
