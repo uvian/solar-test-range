@@ -19,7 +19,7 @@
 
 > AutoCAD 命令不区分大小写，`huatu`、`HUATU`、`HuaTu` 均可。
 
-> 永久加载：`NETLOAD` 一次后，输入 `CUI` → 自定义 → 拖入命令到工具栏即可。
+> 永久加载：`APPLOAD` → 启动组 → 内容 → 添加 `.dll`，以后开 AutoCAD 自动加载。
 > 中望CAD 操作方法相同。
 
 ## 使用
