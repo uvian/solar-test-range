@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <Version>1.0.0</Version>
+    <Description>AutoCAD 日照测试扇形范围自动绘制插件</Description>
+    <Authors>uvian</Authors>
+    <Configurations>Debug;Release</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- AutoCAD 2020 API 引用（无需安装 AutoCAD） -->
+    <PackageReference Include="AutoCAD.NET.Core" Version="23.0.0" />
+    <PackageReference Include="AutoCAD.NET.Services" Version="23.0.0" />
+  </ItemGroup>
+</Project>
