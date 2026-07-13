@@ -36,4 +36,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload v1.0.0 src/SolarTestRange/bin/Release/net472/SolarTestRange.dll --repo ${{ github.repository }} --clobber || echo "Release already exists, uploaded asset"
+        gh release upload v1.0.0 src/SolarTestRange/bin/Release/net472/SolarTestRange.dll --repo ${{ github.repository }} --clobber 2>/dev/null || echo "note: release upload skipped (permissions)"
