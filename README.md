@@ -14,11 +14,11 @@
 ## 安装
 
 1. 从 [Releases](https://github.com/uvian/solar-test-range/releases) 下载 `SolarTestRange.dll`
-2. 拖入 AutoCAD 绘图区，即可加载
-3. 输入命令 **`TESTRANGE`**
+2. 拖入 AutoCAD 绘图区，或输入命令 `NETLOAD` 选择 `.dll`
+3. 输入 **`TESTRANGE`** 运行
 
-> 如需永久加载，输 `APPLOAD` → 内容 → 添加 `.dll` → 勾选"启动时加载"。
-> 中望CAD 操作相同。
+> 永久加载：`NETLOAD` 一次后，输入 `CUI` → 自定义 → 拖入命令到工具栏即可。
+> 中望CAD 操作方法相同。
 
 ## 使用
 
