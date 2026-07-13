@@ -10,6 +10,5 @@
   <ItemGroup>
     <!-- AutoCAD 2020 API 引用（无需安装 AutoCAD） -->
     <PackageReference Include="AutoCAD.NET.Core" Version="23.0.0" />
-    <PackageReference Include="AutoCAD.NET.Services" Version="23.0.0" />
   </ItemGroup>
 </Project>
