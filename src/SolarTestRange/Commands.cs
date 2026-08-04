@@ -20,15 +20,24 @@ namespace SolarTestRange
 
             try
             {
-                // 选择建筑轮廓多段线
-                var selOpts = new PromptEntityOptions("\n选择建筑轮廓 (闭合多段线): ");
-                selOpts.SetRejectMessage("请选择闭合多段线。");
-                selOpts.AddAllowedClass(typeof(Polyline), true);
+                // 选择建筑轮廓多段线（支持一个或多个，框选/点选均可）
+                var selOpts = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\n选择建筑轮廓 (闭合多段线, 可多选): ",
+                    AllowSubSelections = false
+                };
+                // 只允许选轻量多段线（与原有 AddAllowedClass(typeof(Polyline), true) 等价）
+                var filter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "LWPOLYLINE") });
 
-                var selRes = ed.GetEntity(selOpts);
+                var selRes = ed.GetSelection(selOpts, filter);
                 if (selRes.Status != PromptStatus.OK)
                 {
                     ed.WriteMessage("\n已取消。");
+                    return;
+                }
+                if (selRes.Value == null || selRes.Value.Count == 0)
+                {
+                    ed.WriteMessage("\n未选择任何对象。");
                     return;
                 }
 
@@ -48,20 +57,40 @@ namespace SolarTestRange
 
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
-                    var pline = tr.GetObject(selRes.ObjectId, OpenMode.ForRead) as Polyline;
-                    if (pline == null || !pline.Closed)
+                    // 遍历所有选中多段线，取闭合者的包围盒并集
+                    double minX = double.MaxValue, minY = double.MaxValue;
+                    double maxX = double.MinValue, maxY = double.MinValue;
+                    int validCount = 0;
+                    int skippedCount = 0;
+
+                    foreach (ObjectId id in selRes.Value.GetObjectIds())
                     {
-                        ed.WriteMessage("\n错误: 选中的不是闭合多段线。");
+                        var pline = tr.GetObject(id, OpenMode.ForRead) as Polyline;
+                        if (pline == null || !pline.Closed)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        var ext = pline.GeometricExtents;
+                        minX = Math.Min(minX, ext.MinPoint.X);
+                        minY = Math.Min(minY, ext.MinPoint.Y);
+                        maxX = Math.Max(maxX, ext.MaxPoint.X);
+                        maxY = Math.Max(maxY, ext.MaxPoint.Y);
+                        validCount++;
+                    }
+
+                    if (validCount == 0)
+                    {
+                        ed.WriteMessage("\n错误: 所选对象中没有闭合多段线。");
                         tr.Abort();
                         return;
                     }
+                    if (skippedCount > 0)
+                        ed.WriteMessage($"\n  已忽略 {skippedCount} 条非闭合多段线。");
 
-                    var extents = pline.GeometricExtents;
-                    double minX = extents.MinPoint.X;
-                    double minY = extents.MinPoint.Y;
-                    double maxX = extents.MaxPoint.X;
-                    double maxY = extents.MaxPoint.Y;
-                    ed.WriteMessage($"\n  包围盒: ({minX:F2},{minY:F2}) -> ({maxX:F2},{maxY:F2})");
+                    ed.WriteMessage($"\n  已选取 {validCount} 条闭合多段线。");
+                    ed.WriteMessage($"\n  并集包围盒: ({minX:F2},{minY:F2}) -> ({maxX:F2},{maxY:F2})");
 
                     var calc = new SolarRangeCalculator(minX, minY, maxX, maxY, height);
                     string valErr = calc.Validate();
