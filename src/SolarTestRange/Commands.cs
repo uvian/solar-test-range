@@ -41,19 +41,31 @@ namespace SolarTestRange
                     return;
                 }
 
-                // 输入建筑高度
-                var heightRes = ed.GetDouble(new PromptDoubleOptions("\n输入建筑高度 (米): ")
+                // 输入建筑高度（循环直到拿到有效值）
+                // ⚠️ 实测修复 (v1.0.5)：不能用带 DefaultValue 的 GetDouble——GetSelection 结束时的
+                // 回车/空格会被紧接着的 GetDouble 吞掉，直接命中默认值 30 → 北向恒为 60m。
+                // 改为 GetString + TryParse + 无默认值循环：空输入/无效输入一律重试，绝不静默用默认值。
+                double height = 0.0;
+                while (true)
                 {
-                    AllowNegative = false,
-                    AllowZero = false,
-                    DefaultValue = 30.0
-                });
-                if (heightRes.Status != PromptStatus.OK)
-                {
-                    ed.WriteMessage("\n已取消。");
-                    return;
+                    var heightRes = ed.GetString(new PromptStringOptions("\n输入建筑高度 (米): ")
+                    {
+                        AllowSpaces = false
+                    });
+                    if (heightRes.Status == PromptStatus.Cancel)
+                    {
+                        ed.WriteMessage("\n已取消。");
+                        return;
+                    }
+                    if (heightRes.Status == PromptStatus.OK &&
+                        double.TryParse(heightRes.StringResult, out height) &&
+                        height > 0)
+                    {
+                        break;
+                    }
+                    ed.WriteMessage("\n输入无效，请重新输入建筑高度 (米): ");
                 }
-                double height = heightRes.Value;
+                ed.WriteMessage($"\n  建筑高度 = {height:F1} m → 北向范围 = {2 * height:F1} m");
 
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
