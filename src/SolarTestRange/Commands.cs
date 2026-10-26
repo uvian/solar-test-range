@@ -42,26 +42,43 @@ namespace SolarTestRange
                 }
 
                 // 选择绘制模式（框选建筑轮廓之后）
-                // 用 PromptKeywordOptions + Keywords.Add 注册三个关键字。
-                // AllowNone = false 时用户必须选一个；ESC/回车取消 → PromptStatus.Cancel/Error。
+                // 三个关键字 N/B/S，**直接回车默认走 N（南北两侧全画）**。
+                // 实现要点：
+                //   AllowNone = true      → 允许空输入（回车）
+                //   Keywords.Default = N  → 空输入时由 AutoCAD 回填默认关键字
+                //   兜底：即便 StringResult 为空也按 N 处理，避免不同 CAD 平台行为差异
+                // ESC 仍是取消（PromptStatus.Cancel），不受默认值影响。
+                // 提示串只用 AutoCAD 标准格式 "[关键字]" + "<默认>"，不重复罗列，避免出现 "<N> [N/B/S] <N>" 的重复默认值。
+                const string DefaultKeyword = "N";
+
                 var kwOpts = new PromptKeywordOptions(
                     "\n选择绘制范围 [北向2H+南向200(N)/仅北向2H(B)/仅南向200(S)]: ")
                 {
-                    AllowNone = false
+                    AllowNone = true
                 };
                 kwOpts.Keywords.Add("N");
                 kwOpts.Keywords.Add("B");
                 kwOpts.Keywords.Add("S");
+                kwOpts.Keywords.Default = DefaultKeyword;
 
                 var kwRes = ed.GetKeywords(kwOpts);
-                if (kwRes.Status != PromptStatus.OK)
+                if (kwRes.Status == PromptStatus.Cancel)
                 {
                     ed.WriteMessage("\n已取消。");
                     return;
                 }
+                if (kwRes.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage($"\n提示异常({kwRes.Status})，已按默认模式 {DefaultKeyword} 继续。");
+                }
+
+                // 直接回车时 StringResult 可能为空 → 回落默认 N
+                string keyword = string.IsNullOrWhiteSpace(kwRes.StringResult)
+                    ? DefaultKeyword
+                    : kwRes.StringResult.Trim().ToUpperInvariant();
 
                 DrawMode mode;
-                switch (kwRes.StringResult)
+                switch (keyword)
                 {
                     case "N":
                         mode = DrawMode.NorthAndSouth;
@@ -73,8 +90,9 @@ namespace SolarTestRange
                         mode = DrawMode.SouthOnly;
                         break;
                     default:
-                        ed.WriteMessage("\n未识别的模式，已取消。");
-                        return;
+                        ed.WriteMessage($"\n未识别的模式 \"{keyword}\"，已按默认模式 {DefaultKeyword} 继续。");
+                        mode = DrawMode.NorthAndSouth;
+                        break;
                 }
                 ed.WriteMessage($"\n  绘制模式 = {mode.DisplayName()}");
 
