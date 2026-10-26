@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ main ]
 
+# GITHUB_TOKEN 默认只有 read 权限，上传 release 资产必须显式声明 contents: write
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -34,7 +38,8 @@ jobs:
         Copy-Item PackageContents.xml bundle\SolarTestRange.bundle\
         Copy-Item HUATU.lsp bundle\
 
-        # 打包为 zip
+        # 打包为 zip（先删旧包，避免把自己的旧产物打进新包；输出到 bundle 外再移回）
+        Remove-Item bundle\SolarTestRange.bundle.zip -Force -ErrorAction SilentlyContinue
         Compress-Archive -Path bundle\* -DestinationPath bundle\SolarTestRange.bundle.zip
 
     - name: Upload artifacts
@@ -54,8 +59,17 @@ jobs:
       run: |
         # 注意：本步骤是 PowerShell，不能写 bash 的 2>/dev/null（会被当成写文件 D:\dev\null）
         # tag 必须用 ${{ github.ref_name }}，不能写死
+        # PowerShell 不会因原生命令非零退出而中断，必须显式检查 $LASTEXITCODE
+        $ErrorActionPreference = 'Stop'
         $tag = "${{ github.ref_name }}"
-        gh release upload $tag src/SolarTestRange/bin/Release/net472/SolarTestRange.dll --repo ${{ github.repository }} --clobber
-        gh release upload $tag bundle/SolarTestRange.bundle.zip --repo ${{ github.repository }} --clobber
-        gh release upload $tag HUATU.lsp --repo ${{ github.repository }} --clobber
+        $assets = @(
+          'src/SolarTestRange/bin/Release/net472/SolarTestRange.dll',
+          'bundle/SolarTestRange.bundle.zip',
+          'HUATU.lsp'
+        )
+        foreach ($a in $assets) {
+          Write-Host "uploading $a ..."
+          gh release upload $tag $a --repo ${{ github.repository }} --clobber
+          if ($LASTEXITCODE -ne 0) { throw "gh release upload failed for $a (exit $LASTEXITCODE)" }
+        }
         Write-Host "release upload done: $tag"
