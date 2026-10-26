@@ -11,6 +11,9 @@ namespace SolarTestRange
     {
         private const double AngleDeg = 35.0;
         private const double SouthOffset = 200.0;
+
+        /// <summary>南向固定范围（米），供命令层汇报文案使用</summary>
+        public const double SouthLengthDefault = SouthOffset;
         private readonly double _cosA;
         private readonly double _sinA;
 
@@ -20,18 +23,27 @@ namespace SolarTestRange
         public double MaxX { get; }
         public double MaxY { get; }
 
+        /// <summary>本次绘制模式；影响校验规则（仅南向时不要求建筑高度）</summary>
+        public DrawMode Mode { get; }
+
         public Point2D NW => new(MinX, MaxY);
         public Point2D NE => new(MaxX, MaxY);
         public Point2D SW => new(MinX, MinY);
         public Point2D SE => new(MaxX, MinY);
 
         public SolarRangeCalculator(double minX, double minY, double maxX, double maxY, double buildingHeight)
+            : this(minX, minY, maxX, maxY, buildingHeight, DrawMode.NorthAndSouth)
+        {
+        }
+
+        public SolarRangeCalculator(double minX, double minY, double maxX, double maxY, double buildingHeight, DrawMode mode)
         {
             MinX = minX;
             MinY = minY;
             MaxX = maxX;
             MaxY = maxY;
             BuildingHeight = buildingHeight;
+            Mode = mode;
 
             double rad = AngleDeg * Math.PI / 180.0;
             _cosA = Math.Cos(rad);
@@ -82,7 +94,8 @@ namespace SolarTestRange
 
         public string Validate()
         {
-            if (BuildingHeight <= 0) return "建筑高度必须大于 0";
+            // 仅南向模式：南向 200m 是固定值，与建筑高度无关，无需校验高度
+            if (Mode.RequiresHeight() && BuildingHeight <= 0) return "建筑高度必须大于 0";
             if (MaxX <= MinX || MaxY <= MinY) return "包围盒无效";
             return null;
         }

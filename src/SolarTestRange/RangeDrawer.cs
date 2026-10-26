@@ -12,15 +12,18 @@ namespace SolarTestRange
 
         public static void Draw(Database db, SolarRangeCalculator calc)
         {
+            bool drawNorth = calc.Mode.IncludesNorth();
+            bool drawSouth = calc.Mode.IncludesSouth();
+
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                 var btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
 
-                // 确保图层存在
+                // 确保图层存在（只建本次要用到的图层，避免留下空图层）
                 EnsureLayer(tr, db, LayerBox);
-                EnsureLayer(tr, db, LayerNorth);
-                EnsureLayer(tr, db, LayerSouth);
+                if (drawNorth) EnsureLayer(tr, db, LayerNorth);
+                if (drawSouth) EnsureLayer(tr, db, LayerSouth);
 
                 // 各图层 ObjectId 收集，用于编组
                 var idsBox = new ObjectIdCollection();
@@ -30,40 +33,46 @@ namespace SolarTestRange
                 // === 图层：00包围矩形 ===
                 idsBox.Add(DrawRect(tr, btr, calc.MinX, calc.MinY, calc.MaxX, calc.MaxY, LayerBox));
 
-                // === 图层：00二倍楼高范围（北向）===
-                // 向上射线：① ③ ⑤ ⑦
-                idsNorth.Add(DrawRay(tr, btr, calc.NW, calc.NW_Upper, LayerNorth));
-                idsNorth.Add(DrawRay(tr, btr, calc.NE, calc.NE_Upper, LayerNorth));
-                idsNorth.Add(DrawRay(tr, btr, calc.SW, calc.SW_Upper, LayerNorth));
-                idsNorth.Add(DrawRay(tr, btr, calc.SE, calc.SE_Upper, LayerNorth));
-                // 向上闭合线：①→⑤  ③→⑦
-                idsNorth.Add(DrawLine(tr, btr, calc.NW_Upper, calc.SW_Upper, LayerNorth));
-                idsNorth.Add(DrawLine(tr, btr, calc.NE_Upper, calc.SE_Upper, LayerNorth));
-                // 上偏移线
-                idsNorth.Add(DrawLine(tr, btr, calc.OffsetTopLeft, calc.OffsetTopRight, LayerNorth));
-                // 北向圆弧
-                idsNorth.Add(DrawArc(tr, btr, calc.GetArcNW(), LayerNorth));
-                idsNorth.Add(DrawArc(tr, btr, calc.GetArcNE(), LayerNorth));
+                if (drawNorth)
+                {
+                    // === 图层：00二倍楼高范围（北向）===
+                    // 向上射线：① ③ ⑤ ⑦
+                    idsNorth.Add(DrawRay(tr, btr, calc.NW, calc.NW_Upper, LayerNorth));
+                    idsNorth.Add(DrawRay(tr, btr, calc.NE, calc.NE_Upper, LayerNorth));
+                    idsNorth.Add(DrawRay(tr, btr, calc.SW, calc.SW_Upper, LayerNorth));
+                    idsNorth.Add(DrawRay(tr, btr, calc.SE, calc.SE_Upper, LayerNorth));
+                    // 向上闭合线：①→⑤  ③→⑦
+                    idsNorth.Add(DrawLine(tr, btr, calc.NW_Upper, calc.SW_Upper, LayerNorth));
+                    idsNorth.Add(DrawLine(tr, btr, calc.NE_Upper, calc.SE_Upper, LayerNorth));
+                    // 上偏移线
+                    idsNorth.Add(DrawLine(tr, btr, calc.OffsetTopLeft, calc.OffsetTopRight, LayerNorth));
+                    // 北向圆弧
+                    idsNorth.Add(DrawArc(tr, btr, calc.GetArcNW(), LayerNorth));
+                    idsNorth.Add(DrawArc(tr, btr, calc.GetArcNE(), LayerNorth));
+                }
 
-                // === 图层：00二百米范围（南向）===
-                // 向下射线：② ④ ⑥ ⑧
-                idsSouth.Add(DrawRay(tr, btr, calc.NW, calc.NW_Lower, LayerSouth));
-                idsSouth.Add(DrawRay(tr, btr, calc.NE, calc.NE_Lower, LayerSouth));
-                idsSouth.Add(DrawRay(tr, btr, calc.SW, calc.SW_Lower, LayerSouth));
-                idsSouth.Add(DrawRay(tr, btr, calc.SE, calc.SE_Lower, LayerSouth));
-                // 向下闭合线：②→⑥  ④→⑧
-                idsSouth.Add(DrawLine(tr, btr, calc.NW_Lower, calc.SW_Lower, LayerSouth));
-                idsSouth.Add(DrawLine(tr, btr, calc.NE_Lower, calc.SE_Lower, LayerSouth));
-                // 下偏移线
-                idsSouth.Add(DrawLine(tr, btr, calc.OffsetBottomLeft, calc.OffsetBottomRight, LayerSouth));
-                // 南向圆弧
-                idsSouth.Add(DrawArc(tr, btr, calc.GetArcSW(), LayerSouth));
-                idsSouth.Add(DrawArc(tr, btr, calc.GetArcSE(), LayerSouth));
+                if (drawSouth)
+                {
+                    // === 图层：00二百米范围（南向）===
+                    // 向下射线：② ④ ⑥ ⑧
+                    idsSouth.Add(DrawRay(tr, btr, calc.NW, calc.NW_Lower, LayerSouth));
+                    idsSouth.Add(DrawRay(tr, btr, calc.NE, calc.NE_Lower, LayerSouth));
+                    idsSouth.Add(DrawRay(tr, btr, calc.SW, calc.SW_Lower, LayerSouth));
+                    idsSouth.Add(DrawRay(tr, btr, calc.SE, calc.SE_Lower, LayerSouth));
+                    // 向下闭合线：②→⑥  ④→⑧
+                    idsSouth.Add(DrawLine(tr, btr, calc.NW_Lower, calc.SW_Lower, LayerSouth));
+                    idsSouth.Add(DrawLine(tr, btr, calc.NE_Lower, calc.SE_Lower, LayerSouth));
+                    // 下偏移线
+                    idsSouth.Add(DrawLine(tr, btr, calc.OffsetBottomLeft, calc.OffsetBottomRight, LayerSouth));
+                    // 南向圆弧
+                    idsSouth.Add(DrawArc(tr, btr, calc.GetArcSW(), LayerSouth));
+                    idsSouth.Add(DrawArc(tr, btr, calc.GetArcSE(), LayerSouth));
+                }
 
-                // 编组
+                // 编组（只给本次实际绘制的部分建组）
                 CreateGroup(tr, db, "包围矩形", idsBox);
-                CreateGroup(tr, db, "二倍楼高范围", idsNorth);
-                CreateGroup(tr, db, "二百米范围", idsSouth);
+                if (drawNorth) CreateGroup(tr, db, "二倍楼高范围", idsNorth);
+                if (drawSouth) CreateGroup(tr, db, "二百米范围", idsSouth);
 
                 tr.Commit();
             }

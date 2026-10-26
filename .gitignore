@@ -48,3 +48,12 @@ BenchmarkDotNet.Artifacts/
 
 ## Release artifacts
 artifacts/
+
+## Bundle build staging
+bundle/
+*.bundle.zip
+
+
+## 发布资产暂存
+dist/
+

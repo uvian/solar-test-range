@@ -48,10 +48,14 @@ jobs:
 
     - name: Upload to Release (tagged only)
       if: startsWith(github.ref, 'refs/tags/v')
+      shell: pwsh
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload v1.0.2 src/SolarTestRange/bin/Release/net472/SolarTestRange.dll --repo ${{ github.repository }} --clobber 2>/dev/null
-        gh release upload v1.0.2 bundle/SolarTestRange.bundle.zip --repo ${{ github.repository }} --clobber 2>/dev/null
-        gh release upload v1.0.2 HUATU.lsp --repo ${{ github.repository }} --clobber 2>/dev/null
-        echo "release upload done"
+        # 注意：本步骤是 PowerShell，不能写 bash 的 2>/dev/null（会被当成写文件 D:\dev\null）
+        # tag 必须用 ${{ github.ref_name }}，不能写死
+        $tag = "${{ github.ref_name }}"
+        gh release upload $tag src/SolarTestRange/bin/Release/net472/SolarTestRange.dll --repo ${{ github.repository }} --clobber
+        gh release upload $tag bundle/SolarTestRange.bundle.zip --repo ${{ github.repository }} --clobber
+        gh release upload $tag HUATU.lsp --repo ${{ github.repository }} --clobber
+        Write-Host "release upload done: $tag"
