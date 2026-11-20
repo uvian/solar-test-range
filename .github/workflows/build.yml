@@ -72,6 +72,17 @@ jobs:
         # PowerShell 不会因原生命令非零退出而中断，必须显式检查 $LASTEXITCODE
         $ErrorActionPreference = 'Stop'
         $tag = "${{ github.ref_name }}"
+        $repo = "${{ github.repository }}"
+
+        # gh release upload 不会自动创建 Release。直接推 tag 时 Release 还不存在，
+        # 会报 "release not found" 然后整个 job 失败。先确保它存在。
+        $null = gh release view $tag --repo $repo 2>&1
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "release $tag not found, creating ..."
+          gh release create $tag --repo $repo --title "SolarTestRange $tag" --generate-notes
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed for $tag (exit $LASTEXITCODE)" }
+        }
+
         $assets = @(
           'src/SolarTestRange/bin/Release/net472/SolarTestRange.dll',
           'bundle/SolarTestRange.bundle.zip',
@@ -79,7 +90,7 @@ jobs:
         )
         foreach ($a in $assets) {
           Write-Host "uploading $a ..."
-          gh release upload $tag $a --repo ${{ github.repository }} --clobber
+          gh release upload $tag $a --repo $repo --clobber
           if ($LASTEXITCODE -ne 0) { throw "gh release upload failed for $a (exit $LASTEXITCODE)" }
         }
         Write-Host "release upload done: $tag"
