@@ -32,15 +32,25 @@ jobs:
     - name: Create bundle package
       shell: pwsh
       run: |
-        # 创建 .bundle 目录结构
-        New-Item -ItemType Directory -Force -Path bundle\SolarTestRange.bundle\Contents
+        $ErrorActionPreference = 'Stop'
+        New-Item -ItemType Directory -Force -Path bundle\SolarTestRange.bundle\Contents | Out-Null
         Copy-Item src\SolarTestRange\bin\Release\net472\SolarTestRange.dll bundle\SolarTestRange.bundle\Contents\
         Copy-Item PackageContents.xml bundle\SolarTestRange.bundle\
         Copy-Item HUATU.lsp bundle\
 
-        # 打包为 zip（先删旧包，避免把自己的旧产物打进新包；输出到 bundle 外再移回）
+        # 清单必须能解析且是纯 ASCII，否则 AutoCAD 静默跳过整个 bundle。
+        # v1.1.1 就是在这里翻车：中文被存成 '?' 导致属性引号丢失，全员不自动加载。
+        pwsh -NoProfile -File tools\Test-Bundle.ps1 -Path bundle\SolarTestRange.bundle
+        if ($LASTEXITCODE -ne 0) { throw "bundle 清单校验失败，已阻止发布" }
+
+        # 不要用 Compress-Archive：它把条目名写成反斜杠分隔，Windows 资源管理器
+        # 解压后目录结构会错乱（有人能用有人不能用）。用 Windows 自带 bsdtar。
         Remove-Item bundle\SolarTestRange.bundle.zip -Force -ErrorAction SilentlyContinue
-        Compress-Archive -Path bundle\* -DestinationPath bundle\SolarTestRange.bundle.zip
+        tar -a -c -f bundle\SolarTestRange.bundle.zip -C bundle SolarTestRange.bundle HUATU.lsp
+        if ($LASTEXITCODE -ne 0) { throw "tar 打包失败 (exit $LASTEXITCODE)" }
+
+        pwsh -NoProfile -File tools\Test-Bundle.ps1 -Path bundle\SolarTestRange.bundle.zip
+        if ($LASTEXITCODE -ne 0) { throw "zip 校验失败，已阻止发布" }
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

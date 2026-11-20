@@ -1,0 +1,13 @@
+# 统一换行，避免 Linux/Windows 之间来回 checkout 时把文件改写成 CRLF/LF。
+* text=auto
+
+# PackageContents.xml 必须是纯 ASCII，且一个字节都不能被工具改写：
+# 一旦编码或换行被转换，AutoCAD 会静默跳过整个 bundle。
+PackageContents.xml -text
+*.xml -text
+
+*.ps1 text eol=crlf
+*.cs  text eol=crlf
+*.sln text eol=crlf
+*.yml text eol=lf
+*.md  text eol=lf

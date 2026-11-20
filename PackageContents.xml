@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ApplicationPackage SchemaVersion="1.0"
-    Name="日照测试范围绘制插件"
-    Description="自动绘制建筑日照测试扇形范围"
-    Author="uvian"
-    AppVersion="1.1.1"
-    ProductCode="{F3A2B1C4-D5E6-7890-ABCD-EF1234567890}"
-    UpgradeCode="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}">
+<!--
+  SolarTestRange bundle manifest.
 
+  KEEP THIS FILE PURE ASCII.
+  A single stray non-ASCII byte here (for example a Chinese character that got
+  re-saved as '?') makes the XML invalid. AutoCAD then skips the entire bundle
+  WITHOUT showing any error: the plugin never autoloads, while NETLOAD of the
+  same DLL still works fine. That is exactly the v1.1.1 regression.
+
+  Validate before every release:  pwsh -File tools/Test-Bundle.ps1
+-->
+<ApplicationPackage SchemaVersion="1.0"
+    Name="SolarTestRange"
+    Description="Solar test range drawer for AutoCAD"
+    Author="uvian"
+    AppVersion="1.1.2"
+    ProductCode="{88FE5294-CACE-42E4-B7A7-7C38F8BFF58C}"
+    UpgradeCode="{C0453C7C-04A2-41AC-8795-34E11F47B5E0}">
+
+  <!-- R23.1 = AutoCAD 2020. Only widen SeriesMax after rebuilding against that
+       release's AutoCAD.NET package, otherwise the DLL throws on load. -->
   <RuntimeRequirements OS="Win64" Platform="AutoCAD" SeriesMin="R23.1" SeriesMax="R23.1" />
 
-  <Components Description="主程�?>
+  <Components Description="SolarTestRange main module">
     <RuntimeRequirements OS="Win64" Platform="AutoCAD" SeriesMin="R23.1" SeriesMax="R23.1" />
-    <ComponentEntry AppName="SolarTestRange" AppType=".NET" ModuleName="./Contents/SolarTestRange.dll" />
+    <ComponentEntry
+        AppName="SolarTestRange"
+        AppType=".NET"
+        ModuleName="./Contents/SolarTestRange.dll"
+        Version="1.1.2"
+        LoadOnAutoCADStartup="True"
+        LoadOnCommandInvocation="True" />
   </Components>
 </ApplicationPackage>
